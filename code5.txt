@@ -1,0 +1,100 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int main() {
+    int County;
+    cin >> County;
+
+    vector<vector<pair<int, int>>> techni(County);
+    map<pair<int, int>, vector<int>> Track;
+
+    for (int i = 0; i < County; i++) {
+        int x1, y1, x2, y2;
+        cin >> x1 >> y1 >> x2 >> y2;
+
+        int dx = x2 - x1, dy = y2 - y1;
+        int steps = max(abs(dx), abs(dy));
+        int stepX = (dx == 0) ? 0 : dx / abs(dx);
+        int stepY = (dy == 0) ? 0 : dy / abs(dy);
+
+        for (int j = 0; j <= steps; j++) {
+            int curX = x1 + stepX * j;
+            int curY = y1 + stepY * j;
+            techni[i].emplace_back(make_pair(curX, curY));
+            Track[{curX, curY}].emplace_back(i);
+        }
+    }
+
+    string inputt;
+    getline(cin, inputt);
+    getline(cin, inputt);
+
+    unordered_map<string, int> swordLimits;
+    int pos = 0, inputLength = inputt.size();
+
+    while (pos < inputLength) {
+        size_t delimiterPos = inputt.find(':', pos);
+        if (delimiterPos == string::npos) break;
+
+        string sword = inputt.substr(pos, delimiterPos - pos);
+        pos = delimiterPos + 1;
+
+        size_t spacePos = inputt.find(' ', pos);
+        if (spacePos == string::npos) spacePos = inputLength;
+
+        int value = stoi(inputt.substr(pos, spacePos - pos));
+        swordLimits[sword] = value;
+
+        pos = spacePos + 1;
+    }
+
+    string query;
+    cin >> query;
+
+    ll total = 0;
+
+    for (auto &entry : Track) {
+        if (entry.second.size() >= 2) {
+            int dCount = entry.second.size();
+            int minTechniqueCost = INT_MAX;
+
+            for (auto segmentId : entry.second) {
+                auto &currentTechnique = techni[segmentId];
+                size_t techniqueLength = currentTechnique.size();
+                size_t index = find(currentTechnique.begin(), currentTechnique.end(), entry.first) - currentTechnique.begin();
+
+                int leftSteps = index;
+                int rightSteps = techniqueLength - index - 1;
+                int cost = (leftSteps > 0 && rightSteps > 0) ? min(leftSteps, rightSteps) : max(leftSteps, rightSteps);
+
+                minTechniqueCost = min(minTechniqueCost, cost);
+            }
+
+            total += (ll)dCount * minTechniqueCost;
+        }
+    }
+
+    if (swordLimits.find(query) != swordLimits.end()) {
+        if (total >= swordLimits[query]) {
+            cout << "Yes\n";
+        } else {
+            cout << "No\n";
+        }
+    } else {
+        cout << "No\n";
+    }
+
+    int validSwords = 0, totalSwords = swordLimits.size();
+
+    for (auto &entry : swordLimits) {
+        if (total >= entry.second) {
+            validSwords++;
+        }
+    }
+
+    double successRate = (double)validSwords / totalSwords;
+    cout << fixed << setprecision(2) << successRate;
+
+    return 0;
+}
