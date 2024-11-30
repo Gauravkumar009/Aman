@@ -1,0 +1,39 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    int numNodes, numEdges, threshold, days = 1, infectedCount = 0;
+    cin >> numNodes >> numEdges;
+
+    vector<set<int>> friendships(numNodes);
+    for (int i = 0, node1, node2; i < numEdges; ++i) {
+        cin >> node1 >> node2;
+        friendships[node1].insert(node2);
+        friendships[node2].insert(node1);
+    }
+
+    cin >> threshold;
+    vector<bool> isInfected(numNodes, true);
+    infectedCount = numNodes;
+
+    while (infectedCount < threshold) {
+        vector<bool> newInfections(numNodes, false);
+        for (int i = 0; i < numNodes; ++i) {
+            int infectedFriends = 0;
+            for (int friendNode : friendships[i]) {
+                infectedFriends += isInfected[friendNode];
+            }
+            if (isInfected[i] && infectedFriends == 3) {
+                newInfections[i] = true;
+            } else if (!isInfected[i] && infectedFriends < 3) {
+                newInfections[i] = true;
+            }
+        }
+        isInfected = newInfections;
+        infectedCount += count(isInfected.begin(), isInfected.end(), true);
+        ++days;
+    }
+
+    cout << days;
+    return 0;
+}
