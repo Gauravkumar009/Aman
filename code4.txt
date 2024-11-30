@@ -1,0 +1,67 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <climits>
+using namespace std;
+
+int minCostToFormString(int n, vector<pair<string, int>> &substrings, string mainString) {
+    int m = mainString.length();
+    vector<int> dp(m + 1, INT_MAX); 
+    dp[0] = 0; // No cost to form an empty string
+
+    // Dynamic programming loop to compute the minimum cost
+    for (int i = 0; i <= m; ++i) {
+        if (dp[i] == INT_MAX) continue; // Skip unreachable points
+
+        // Check all substrings
+        for (auto &sub : substrings) {
+            string substring = sub.first;
+            int cost = sub.second;
+            int subLen = substring.length();
+
+            // If the substring matches the portion of the main string
+            if (i + subLen <= m && mainString.substr(i, subLen) == substring) {
+                dp[i + subLen] = min(dp[i + subLen], dp[i] + cost);
+                
+                // Check for partial matching to minimize the cost further
+                for (int k = 1; k < subLen; ++k) {
+                    if (i + k <= m && mainString.substr(i, k) == substring.substr(0, k)) {
+                        dp[i + k] = min(dp[i + k], dp[i] + cost);
+                    }
+                }
+            }
+        }
+    }
+
+    // If the last position is still at the default INT_MAX, it's impossible to form the string
+    return (dp[m] == INT_MAX) ? -1 : dp[m]; 
+}
+
+int main() {
+    int n;
+    cin >> n;
+
+    vector<pair<string, int>> substrings;
+    // Read all substrings and their respective costs
+    for (int i = 0; i < n; ++i) {
+        string substring;
+        int cost;
+        cin >> substring >> cost;
+        substrings.push_back({substring, cost});
+    }
+
+    string mainString;
+    cin >> mainString;
+
+    int result = minCostToFormString(n, substrings, mainString);
+
+    // Ensure the output format is exactly as expected
+    if (result == -1) {
+        cout << "Impossible";
+    } else {
+        cout << result;
+    }
+
+    // No extra newline after the result to avoid "presentation error"
+    return 0;
+}
