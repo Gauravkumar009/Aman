@@ -1,0 +1,115 @@
+import java.util.*;
+
+public class ToggleChallenge {
+
+    // Method to get possible digits for a faulty digit
+    public static List<Integer> getPossibleDigits(Map<Integer, String> validDigits, String faultyDigit) {
+        List<Integer> possibleDigits = new ArrayList<>();
+
+        for (Map.Entry<Integer, String> entry : validDigits.entrySet()) {
+            int mismatches = 0;
+            String pattern = entry.getValue();
+
+            // Count mismatches between the faulty digit and the pattern
+            for (int i = 0; i < faultyDigit.length(); i++) {
+                if (faultyDigit.charAt(i) != pattern.charAt(i)) {
+                    mismatches++;
+                    if (mismatches > 1) break; // Stop early if mismatches exceed 1
+                }
+            }
+
+            // If mismatches <= 1, it's a possible match
+            if (mismatches <= 1) {
+                possibleDigits.add(entry.getKey());
+            }
+        }
+
+        return possibleDigits;
+    }
+
+    // Solve the main problem
+    public static void solve() {
+        Scanner scanner = new Scanner(System.in);
+
+        // Read the 7-segment digit patterns
+        List<String> segmentData = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            segmentData.add(scanner.nextLine().strip());
+        }
+
+        // Read the faulty 7-segment input
+        List<String> faultyInput = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            faultyInput.add(scanner.nextLine().strip());
+        }
+
+        // Map digits to their segment patterns
+        Map<Integer, String> digitPatterns = new HashMap<>();
+        for (int digit = 0; digit < 10; digit++) {
+            StringBuilder pattern = new StringBuilder();
+            for (int row = 0; row < 3; row++) {
+                pattern.append(segmentData.get(row).substring(digit * 3, (digit + 1) * 3));
+            }
+            digitPatterns.put(digit, pattern.toString());
+        }
+
+        // Generate possible numbers
+        List<List<Integer>> possibleNumbers = new ArrayList<>();
+        int faultyLength = faultyInput.get(0).length() / 3;
+
+        for (int i = 0; i < faultyLength; i++) {
+            StringBuilder faultyDigit = new StringBuilder();
+            for (int row = 0; row < 3; row++) {
+                faultyDigit.append(faultyInput.get(row).substring(i * 3, (i + 1) * 3));
+            }
+
+            List<Integer> matchingDigits = getPossibleDigits(digitPatterns, faultyDigit.toString());
+            if (matchingDigits.isEmpty()) {
+                System.out.print("Invalid");  // No newline here
+                return;  // If no valid digit found, print "Invalid" and return
+            }
+            possibleNumbers.add(matchingDigits);
+        }
+
+        // Calculate the total sum of all valid combinations
+        long totalSum = calculateTotalSum(possibleNumbers);
+        System.out.print(totalSum);  // Print without extra newline
+    }
+
+    // Calculate the total sum of all valid combinations
+    public static long calculateTotalSum(List<List<Integer>> possibleNumbers) {
+        long totalSum = 0;
+
+        // Use iterative approach to avoid recursion overhead
+        List<Integer> indices = new ArrayList<>(Collections.nCopies(possibleNumbers.size(), 0));
+        int[] currentIndices = new int[possibleNumbers.size()];
+        int digitCount = possibleNumbers.size();
+
+        while (true) {
+            // Build the number from current indices
+            StringBuilder number = new StringBuilder();
+            for (int i = 0; i < digitCount; i++) {
+                number.append(possibleNumbers.get(i).get(currentIndices[i]));
+            }
+            totalSum += Long.parseLong(number.toString());
+
+            // Increment indices for the next combination
+            int idx = digitCount - 1;
+            while (idx >= 0) {
+                currentIndices[idx]++;
+                if (currentIndices[idx] < possibleNumbers.get(idx).size()) break;
+                currentIndices[idx] = 0;
+                idx--;
+            }
+
+            // Exit if all combinations are exhausted
+            if (idx < 0) break;
+        }
+
+        return totalSum;
+    }
+
+    public static void main(String[] args) {
+        solve();
+    }
+}
